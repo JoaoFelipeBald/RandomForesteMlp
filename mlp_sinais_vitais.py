@@ -21,7 +21,6 @@ CANDIDATOS = [(NEURONIOS_OCULTOS, EPOCAS, TAXA_APRENDIZADO),
 def ler_dados(caminho):
     """Le o dataset original com oito colunas."""
     dados = []
-    identificadores = set()
     with open(caminho, encoding="utf-8-sig") as arquivo:
         for numero_linha, linha in enumerate(arquivo, start=1):
             if not linha.strip():
@@ -34,7 +33,6 @@ def ler_dados(caminho):
                     f"Linha {numero_linha}: precisa de 8 colunas, aqui tem {len(partes)}."
                 )
             identificador = int(partes[0])
-            identificadores.add(identificador)
 
             # Usa qPA, pulso e respiracao como entradas.
             entradas = [float(partes[3]), float(partes[4]), float(partes[5])]
@@ -174,26 +172,15 @@ def classificar(gravidade, limites):
     return 4
 
 
-def calcular_rmse(rede, dados):
-    return math.sqrt(sum(
-        (prever_gravidade(rede, entradas) - gravidade) ** 2
-        for _, entradas, gravidade, _ in dados
-    ) / len(dados))
-
-
 def treinar_rede(rede, treino, epocas, taxa):
     """Treina a rede com backpropagation e descida do gradiente."""
     sorteador = random.Random(SEMENTE)
     indices = list(range(len(treino)))
-    historico = []
     for epoca in range(1, epocas + 1):
         sorteador.shuffle(indices)
         for indice in indices:
             _, entradas, gravidade, _ = treino[indice]
             backpropagation(rede, entradas, gravidade, taxa)
-        if epoca == 1 or epoca % 50 == 0 or epoca == epocas:
-            historico.append((epoca, calcular_rmse(rede, treino)))
-    return historico
 
 
 def avaliar_previsoes(registros_rotulados, previsoes):
@@ -280,13 +267,12 @@ def main():
 
     melhor_rede = None
     melhor_parametros = None
-    melhor_historico = None
     menor_rmse = float('inf')
 
     print('\nteste de parâmetros:')
     for neuronios, epocas, taxa in CANDIDATOS:
         rede = criar_rede(neuronios)
-        historico = treinar_rede(rede, treino_reforcado, epocas, taxa)
+        treinar_rede(rede, treino_reforcado, epocas, taxa)
         metricas = avaliar(rede, validacao, limites)
 
         print(f"  {neuronios} neurônios, {epocas} épocas, taxa {taxa} "
@@ -296,7 +282,6 @@ def main():
             menor_rmse = metricas['rmse']
             melhor_rede = rede
             melhor_parametros = (neuronios, epocas, taxa)
-            melhor_historico = historico
 
     print(f'\nmelhor configuração: {melhor_parametros[0]} neurônios, '
           f'{melhor_parametros[1]} épocas, taxa {melhor_parametros[2]}')
