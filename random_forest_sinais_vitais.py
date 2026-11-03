@@ -30,7 +30,7 @@ def ler_dados(caminho):
                 continue
             if len(partes) != 8:
                 raise ValueError(
-                    f"Linha {numero_linha}: esperadas 8 colunas, recebidas {len(partes)}."
+                    f"Linha {numero_linha}: precisa de 8 colunas, aqui tem {len(partes)}."
                 )
             identificador = int(partes[0])
             identificadores.add(identificador)
